@@ -8,6 +8,7 @@ import BottomNav from './BottomNav';
 import SkipNavigation from '../UI/SkipNavigation';
 import '../../styles/animations.css';
 
+
 const Layout: React.FC = () => {
   const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);

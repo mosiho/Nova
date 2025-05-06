@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import path from 'path';
+import { MongoMemoryServer } from 'mongodb-memory-server';
 
 // Load environment variables
 dotenv.config();
@@ -54,17 +55,29 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-// Connect to MongoDB and start server
-mongoose
-  .connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/nova_health')
-  .then(() => {
+// Connect to MongoDB (using in-memory server for development)
+const startServer = async () => {
+  try {
+    let mongoURI = process.env.MONGODB_URI;
+
+    // If in development and no MongoDB URI is provided, use in-memory MongoDB
+    if (process.env.NODE_ENV === 'development' && !mongoURI) {
+      const mongod = await MongoMemoryServer.create();
+      mongoURI = mongod.getUri();
+      console.log('Using MongoDB Memory Server:', mongoURI);
+    }
+
+    await mongoose.connect(mongoURI || 'mongodb://localhost:27017/nova_health');
+    console.log('Connected to MongoDB');
+
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
-    console.log('Connected to MongoDB');
-  })
-  .catch((error) => {
+  } catch (error) {
     console.error('MongoDB connection error:', error);
-  });
+  }
+};
+
+startServer();
 
 export default app; 
